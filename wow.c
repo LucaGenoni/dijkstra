@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-// #define INPUTTXT "./-h/input/open/input.6"
-#define INPUTTXT "./tests/input/file/input_6"
+// #define INPUTTXT "tests/input/file/input_2"
+// #define OUTPUTTXT "tests/output4"
 FILE *standardin,*standardout;
 typedef struct node{
 	unsigned int label,cost;
@@ -15,6 +15,7 @@ typedef struct headNode{
 	t_node *first,*last;
 }t_headNode;
 
+// i can also don't free the memory
 void free_incidence_Matrix(t_headNode *sourceHead,unsigned int number_Nodes){
 	t_node *toDelete;
 	unsigned int i;
@@ -30,38 +31,62 @@ void free_incidence_Matrix(t_headNode *sourceHead,unsigned int number_Nodes){
 		// displayIncidentMatrix(sourceHead,number_Nodes);
 	}
 }
+unsigned int heapChieldSX(unsigned int index){
+	return index*2;
+}
+unsigned int heapChieldDX(unsigned int index){
+	return index*2+1;
+}
+unsigned int heapFather(unsigned int index){
+	return index/2;
+}
+void insertChield(unsigned int *heap,unsigned int size,unsigned int toAdd){
+	unsigned int index=0,newIndex=UINT_MAX;
+	while(index<size){
+		newIndex=index;
+		if (toAdd<heap[index]) index *= 2;
+		else index = index * 2 + 1;
+	}
+	if (newIndex==UINT_MAX) heap[0]=toAdd;
+	else if(index<size) heap[index] = toAdd;
+}
 void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 	t_node *temp;
 	unsigned int i,j,queue[number_Nodes],i_min;
-	unsigned int min;
+	unsigned int min,previous;
 	min = 0;
 	i_min = 0;
-	for (i=0;i<number_Nodes;i++) queue[i] = 0;
-	sourceHead[0].distance = 0;
+	queue[0] = 1;
+	for (i=1;i<number_Nodes;i++) queue[i] = 0;
+	// sourceHead[0].distance = 0;
 	// displayIncidentMatrix(sourceHead,number_Nodes);
 	// printf("\n");
-	for (i=0;i<number_Nodes;i++){
-		// pick the node with minimum cost
-		for (j=0;j<number_Nodes;j++) if (queue[j]==0){
-			min = sourceHead[j].distance;
-			i_min = j;
-			break;
-		}
-		for (j=0;j<number_Nodes;j++){
-			if (queue[j]==0){
+	previous= 0;
+	for (i=1;i<number_Nodes;i++){
+		// pick the first available node
+		for (j=1;j<number_Nodes;j++) 
+			if (queue[j]==0 && sourceHead[j].visited==1){
+				min = sourceHead[j].distance;
+				i_min = j;
+				break;
+			}
+		for (;j<number_Nodes;j++){
+			if (queue[j]==0 && sourceHead[j].visited==1){
 				if (min>sourceHead[j].distance){
 					min = sourceHead[j].distance;
 					i_min = j;
 				}
 			}
 		}
+		if (previous==i_min) break;
+		previous=i_min;
 		// on the next iteration queue[i] will not be considered
 		queue[i_min] = 1;
-		// check printf("<");
+		//if(standardout) fprintf(standardout,"<");
 		for(temp = sourceHead[i_min].first,j=0; j<sourceHead[i_min].size; temp = temp->next,j++){
 			if(queue[temp->label]==0){
 				min = sourceHead[i_min].distance + temp->cost;
-				// check printf("%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
+				//if(standardout) fprintf(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
 				if (min < sourceHead[temp->label].distance){
 					sourceHead[temp->label].visited = 1;
 					sourceHead[temp->label].distance = min;
@@ -69,13 +94,62 @@ void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 			}
 		}
 	}
+	//if(standardout) fprintf(standardout,"\n");
+	return;
+};
+
+void dijkstraHeap(t_headNode *sourceHead,unsigned int number_Nodes){
+	t_node *temp;
+	unsigned int i,j,queue[number_Nodes],i_min;
+	unsigned int min,previous;
+	min = 0;
+	i_min = 0;
+	queue[0] = 1;
+	for (i=1;i<number_Nodes;i++) queue[i] = 0;
+	// sourceHead[0].distance = 0;
+	// displayIncidentMatrix(sourceHead,number_Nodes);
+	// printf("\n");
+	previous= 0;
+	for (i=1;i<number_Nodes;i++){
+		// pick the first available node
+		for (j=1;j<number_Nodes;j++) 
+			if (queue[j]==0 && sourceHead[j].visited==1){
+				min = sourceHead[j].distance;
+				i_min = j;
+				break;
+			}
+		for (;j<number_Nodes;j++){
+			if (queue[j]==0 && sourceHead[j].visited==1){
+				if (min>sourceHead[j].distance){
+					min = sourceHead[j].distance;
+					i_min = j;
+				}
+			}
+		}
+		if (previous==i_min) break;
+		previous=i_min;
+		// on the next iteration queue[i] will not be considered
+		queue[i_min] = 1;
+		//if(standardout) fprintf(standardout,"<");
+		for(temp = sourceHead[i_min].first,j=0; j<sourceHead[i_min].size; temp = temp->next,j++){
+			if(queue[temp->label]==0){
+				min = sourceHead[i_min].distance + temp->cost;
+				//if(standardout) fprintf(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
+				if (min < sourceHead[temp->label].distance){
+					sourceHead[temp->label].visited = 1;
+					sourceHead[temp->label].distance = min;
+				}
+			}
+		}
+	}
+	//if(standardout) fprintf(standardout,"\n");
 	return;
 };
 
 // dosplay a single arcs 
 void displayArc(t_node *this){
 	// printf("%3d(%5d)  <%6x-%6x>, ",this->label,this->cost,this,(this->next));
-	// check printf("%3d(%5d), ",this->label,this->cost,this,(this->next));
+	//if(standardout) fprintf(standardout,"%3d(%5d), ",this->label,this->cost);
 	return;
 }
 
@@ -83,7 +157,7 @@ void displayArc(t_node *this){
 // example of loop to free the memory
 void displayAllNode(t_headNode sourceHead){
 	t_node *temp;
-	// check printf("\nNodo %3d - first: %6x - last: %6x \tArcs: ",sourceHead.id_Node,sourceHead.first,sourceHead.last);
+	//if(standardout) fprintf(standardout,"\nNodo %3d - first: %6x - last: %6x \tArcs: ",sourceHead.id_Node,sourceHead.first,sourceHead.last);
 	for(temp = sourceHead.first; temp != NULL; temp = temp->next) displayArc(temp);
 	return;
 }
@@ -92,7 +166,7 @@ void displayAllNode(t_headNode sourceHead){
 // example of loop to use for dijkstra
 void displayNode(t_headNode sourceHead){
 	t_node *temp;
-	// check printf("\n%3d (%6x->%6x) : ",sourceHead.id_Node,sourceHead.first,sourceHead.last);
+	//if(standardout) fprintf(standardout,"\nN:%3d, V:%1d(%6d), S:%4d, (%6x->%6x) : ",sourceHead.id_Node,sourceHead.visited,sourceHead.distance,sourceHead.size,sourceHead.first,sourceHead.last);
 	if (sourceHead.last!=NULL) {
 		for(temp = sourceHead.first; temp != NULL && sourceHead.last!=temp; temp = temp->next) displayArc(temp);
 		displayArc(temp); // last element
@@ -104,7 +178,7 @@ void displayNode(t_headNode sourceHead){
 void displayIncidentMatrix(t_headNode *sourceHead,unsigned int number_Nodes){
 	int i;
 	for (i=0;i<number_Nodes;i++) displayNode(sourceHead[i]);
-	// check printf("\n");
+	//if(standardout) fprintf(standardout,"\n");
 	return;
 }
 
@@ -127,6 +201,7 @@ void pushArc(t_headNode *sourceHead,unsigned int src, unsigned int dest,unsigned
 	sourceHead[src].size++;
 	return;
 }
+
 int main(){
 // definitions
 	// constants
@@ -135,9 +210,14 @@ int main(){
 	// variables
 		unsigned int id_Graphs, src, dest, costNode, sum, max, i_max,size_topK;
 		char input_Char;
-
-        standardin=fopen(INPUTTXT,"r");
-        if(!standardin) standardin= stdin;
+		standardin =stdin;
+        // standardin=fopen(INPUTTXT,"r");
+        // if(!standardin) standardin= stdin;
+        // standardout=fopen(OUTPUTTXT,"r");
+		// if(standardin) {
+		// 	fclose(standardout);
+        // 	standardout=fopen(OUTPUTTXT,"w");
+		// }
 // Initializations
 	// constants 
 		if(fscanf(standardin,"%d %d",&number_Nodes,&top_K)==EOF) return 10;
@@ -160,38 +240,54 @@ int main(){
 
 		if (input_Char=='A') {
 			while (getc(standardin)!='\n');
-			// printf("\n<<<<<<<<<<<<<<<Grafo %d",id_Graphs);
 			// update arcs of incidence_Matrix
-			for (src=0; src < number_Nodes; src++){
-				// Initialization of the new last arc. (no counter, but pointer to pushing/overwrite at the end of the list)
-				incidence_Matrix[src].last = NULL;
-				incidence_Matrix[src].distance = UINT_MAX;
-				incidence_Matrix[src].visited = 0;
-				incidence_Matrix[src].size = 0;
-				// push existing arcs
-				for( dest=0; dest<number_Nodes;dest++){
+            if(number_Nodes>0){
+                incidence_Matrix[0].last = NULL;
+				incidence_Matrix[0].size = 0;
+				incidence_Matrix[0].distance = 0;
+				incidence_Matrix[0].visited = 1;
+                if(fscanf(standardin,"%d",&costNode)==EOF) return 20; // retrieve the weight
+                if(getc(standardin)==EOF) return 30; // discard "," or "\n"
+                for( dest=1; dest<number_Nodes;dest++){
 					if(fscanf(standardin,"%d",&costNode)==EOF) return 20; // retrieve the weight
 					if(getc(standardin)==EOF) return 30; // discard "," or "\n"
-					// printf("%3d(%5d),",dest,costNode); // show matrix on screen
-					if (src==dest || costNode==0) continue; // optimization, no storing for non arcs and self arcs.
+					// printf("%3d(%5d),",dest,costNode); // show matrix on screen  
+                    incidence_Matrix[dest].visited = costNode!=0?1:0;
+                    if (incidence_Matrix[dest].visited) incidence_Matrix[dest].distance = costNode;
+                    else incidence_Matrix[dest].distance = UINT_MAX;
+                     // optimization, no storing for non arcs and self arcs.
+					
+				}
+            }
+			for (src=1; src < number_Nodes; src++){
+				// Initialization of the new last arc. (no counter, but pointer to pushing/overwrite at the end of the list)
+				incidence_Matrix[src].last = NULL;
+				// incidence_Matrix[src].distance = UINT_MAX;
+				// incidence_Matrix[src].visited = 0;
+				incidence_Matrix[src].size = 0;
+				// push existing arcs
+                if(fscanf(standardin,"%d",&costNode)==EOF) return 20; // retrieve the weight
+                if(getc(standardin)==EOF) return 30; // discard "," or "\n"
+				for( dest=1; dest<number_Nodes;dest++){
+					if(fscanf(standardin,"%d",&costNode)==EOF) return 20; // retrieve the weight
+					if(getc(standardin)==EOF) return 30; // discard "," or "\n"
+					if (src==dest || costNode==0 ) continue; // optimization, no storing for non arcs and self arcs.
 					pushArc(incidence_Matrix,src,dest,costNode); // store the arc
 					
 				}
-				// printf("\n"); // new node 
 			}
-			// printf("\nStampa di controllo:");
-			// displayIncidentMatrix(incidence_Matrix,number_Nodes);
+			// if (standardout) {
+			// 	fprintf(standardout,"############################    %d\n",id_Graphs);
+			// 	displayIncidentMatrix(incidence_Matrix,number_Nodes);
+			// };
 			dijkstra(incidence_Matrix,number_Nodes);
 			// add all the distance of visited nodes
-			sum = incidence_Matrix[0].distance;
-			// printf("\n%d",incidence_Matrix[0].distance);
+			sum = 0;
 			for (src = 1; src < number_Nodes; src++){
 				if (incidence_Matrix[src].visited !=0){
 					sum += incidence_Matrix[src].distance;
-					// printf(" + %d",incidence_Matrix[src].distance);
 				}
 			}
-			// printf(" = \n");
 			// update TOPK list
 			if(id_Graphs<top_K){
 				listTopK[id_Graphs][0] = id_Graphs;
@@ -210,13 +306,14 @@ int main(){
 					listTopK[i_max][1] = sum;
 				}
 			}
-			// printf("%u(%u)\n",id_Graphs,sum);
+			
+			// if (standardout) {
+			// 	fprintf(standardout,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>    %d - cost: %d\n",id_Graphs, sum);
+			// 	displayIncidentMatrix(incidence_Matrix,number_Nodes);
+			// };
 			id_Graphs++;
-			// if (id_Graphs==19) return 0;
-			// else printf("############################    %d\n",++id_Graphs);
 		}else if (input_Char=='T'){
 			while (getc(standardin)!='\n');
-			// printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Valutazione\n");
 			if(id_Graphs < top_K) size_topK = id_Graphs;
 			else size_topK = top_K;
 			if (size_topK>0){
@@ -226,7 +323,6 @@ int main(){
 			}
 			printf("\n");
 		}
-		// else while (getc(standardin)!='\n');
 	};
 
 	return 0;

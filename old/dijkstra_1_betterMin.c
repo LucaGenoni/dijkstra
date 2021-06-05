@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 // #define INPUTTXT "./-h/input/open/input.6"
-#define INPUTTXT "./tests/input/file/input_6"
+#define INPUTTXT "./tests/input/file/input_2"
 FILE *standardin,*standardout;
 typedef struct node{
 	unsigned int label,cost;
@@ -30,31 +30,37 @@ void free_incidence_Matrix(t_headNode *sourceHead,unsigned int number_Nodes){
 		// displayIncidentMatrix(sourceHead,number_Nodes);
 	}
 }
+
 void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 	t_node *temp;
 	unsigned int i,j,queue[number_Nodes],i_min;
-	unsigned int min;
+	unsigned int min,previous;
 	min = 0;
 	i_min = 0;
 	for (i=0;i<number_Nodes;i++) queue[i] = 0;
 	sourceHead[0].distance = 0;
+	sourceHead[0].visited=1;
 	// displayIncidentMatrix(sourceHead,number_Nodes);
 	// printf("\n");
+	previous= -1;
 	for (i=0;i<number_Nodes;i++){
-		// pick the node with minimum cost
-		for (j=0;j<number_Nodes;j++) if (queue[j]==0){
-			min = sourceHead[j].distance;
-			i_min = j;
-			break;
-		}
-		for (j=0;j<number_Nodes;j++){
-			if (queue[j]==0){
+		// pick the first available node
+		for (j=0;j<number_Nodes;j++) 
+			if (queue[j]==0 && sourceHead[j].visited==1){
+				min = sourceHead[j].distance;
+				i_min = j;
+				break;
+			}
+		for (;j<number_Nodes;j++){
+			if (queue[j]==0 && sourceHead[j].visited==1){
 				if (min>sourceHead[j].distance){
 					min = sourceHead[j].distance;
 					i_min = j;
 				}
 			}
 		}
+		if (previous==i_min) break;
+		previous=i_min;
 		// on the next iteration queue[i] will not be considered
 		queue[i_min] = 1;
 		// check printf("<");
@@ -169,7 +175,9 @@ int main(){
 				incidence_Matrix[src].visited = 0;
 				incidence_Matrix[src].size = 0;
 				// push existing arcs
-				for( dest=0; dest<number_Nodes;dest++){
+                if(fscanf(standardin,"%d",&costNode)==EOF) return 20; // retrieve the weight
+                if(getc(standardin)==EOF) return 30; // discard "," or "\n"
+				for( dest=1; dest<number_Nodes;dest++){
 					if(fscanf(standardin,"%d",&costNode)==EOF) return 20; // retrieve the weight
 					if(getc(standardin)==EOF) return 30; // discard "," or "\n"
 					// printf("%3d(%5d),",dest,costNode); // show matrix on screen
