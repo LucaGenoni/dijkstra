@@ -15,7 +15,9 @@ typedef struct headNode{
 	t_node *first,*last;
 }t_headNode;
 
-// i can also don't free the memory
+/**
+ * liberazione della memoria per la matrice di incidenza.
+**/
 void free_incidence_Matrix(t_headNode *sourceHead,unsigned int number_Nodes){
 	t_node *toDelete;
 	unsigned int i;
@@ -31,25 +33,67 @@ void free_incidence_Matrix(t_headNode *sourceHead,unsigned int number_Nodes){
 		// displayIncidentMatrix(sourceHead,number_Nodes);
 	}
 }
-unsigned int heapChieldSX(unsigned int index){
-	return index*2;
+
+/**
+ * heap binario. 
+ * in posizione 0 c'é il numero di elementi contenuti nella lista 
+ * gli elementi 1,...,N contengono gli elementi dell'heap
+**/
+void heapify(int heap[], int index){//log(n)
+    int parent = index/2, temp;
+    if (parent>0) {
+        if (heap[index] > heap[parent]) {
+            temp = heap[index];
+            heap[index] = heap[parent];
+            heap[parent] = temp;
+            heapify(heap, parent);
+        }
+    }
 }
-unsigned int heapChieldDX(unsigned int index){
-	return index*2+1;
+
+void fillVoid(int heap[], int size, int index){ //log(n)
+    int left = 2 * index, right = left+1;
+    if (right<size){
+        if(heap[left] > heap[right]){
+            heap[index] = heap[left];
+            fillVoid(heap, size, left);
+        }else{
+            heap[index] = heap[right];
+            fillVoid(heap, size, right);
+        }
+    }else if (left<size){
+        heap[index] = heap[left];
+        fillVoid(heap, size, left);
+    }
+    return;
 }
-unsigned int heapFather(unsigned int index){
-	return index/2;
+
+void insertNode(int heap[],int size, int toAdd){ //log(n)
+    if (heap[0]<size){
+        // just insert
+        heap[0]++;
+        heap[heap[0]] = toAdd;
+        heapify(heap, heap[0]-1); //log(n)
+    }else{
+        int max[2];
+        getMaxArray(heap, max, size); //log(n)
+        insertNode(heap,size,toAdd); //log(n)
+    }
+    return ;
 }
-void insertChield(unsigned int *heap,unsigned int size,unsigned int toAdd){
-	unsigned int index=0,newIndex=UINT_MAX;
-	while(index<size){
-		newIndex=index;
-		if (toAdd<heap[index]) index *= 2;
-		else index = index * 2 + 1;
-	}
-	if (newIndex==UINT_MAX) heap[0]=toAdd;
-	else if(index<size) heap[index] = toAdd;
+
+void getMaxArray (int heap[], int max[], int size){ //log(n)
+    if (heap[0] > 0){
+        max[0] = 1;
+        max[1] = heap[1];
+        fillVoid(heap,size,1); //log(n)
+        heap[0]--;
+    }else max[0] = 0;
 }
+
+/**
+ * algoritmo dijkstra
+**/
 void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 	t_node *temp;
 	unsigned int i,j,queue[number_Nodes],i_min;

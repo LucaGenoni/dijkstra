@@ -69,130 +69,241 @@ static void display_tree(const int *arr, size_t arrlen) {
     }
 
 }
-void printArray(int heap[], int actual){
-    int i;
-    if (actual>0){
-        printf("%d",heap[0]);
-        for ( i = 1; i < actual; ++i) printf(" %d",heap[i]);
-        printf("\n");
-    }
-}
 
-void maxHeapifyToDelete(int heap[], int actual, int parent){
-    int left=2*parent, right=2*parent, largest = parent;
-    if (left < actual && heap[left] > heap[largest]) largest = left;
-    if (right < actual && heap[right] > heap[largest]) largest = right;
-    if (largest != parent){
-        left = heap[largest];
-        heap[largest] = heap[parent];
-        heap[parent] = left;
-        maxHeapifyToDelete(heap,actual,largest);
+void maxFillVoid(int heap[], int maxSize, int index){
+    int left = 2 * index, right = left+1;
+    if (right<maxSize){
+        if(heap[left] > heap[right]){
+            heap[index] = heap[left];
+            maxFillVoid(heap, maxSize, left);
+        }else{
+            heap[index] = heap[right];
+            maxFillVoid(heap, maxSize, right);
+        }
+    }else if (left<maxSize){
+        heap[index] = heap[left];
+        maxFillVoid(heap, maxSize, left);
     }
+    return;
 }
-
-int getMax(int heap[], int *actual){
-    int max=0;
-    if ((*actual)>0){
-        max = heap[0];
-        (*actual)--;
-        heap[0] = heap[(*actual)];
-        heap[(*actual)+1] = 0;
-        maxHeapifyToDelete(heap,(*actual),0);
-    }
-    return max;
-}
-
-void heapify(int heap[], int index){
+void maxHeapify(int heap[], int index){
     int parent = index/2, temp;
-    if (heap[index] != UINT_MAX) {
+    if (parent>0) {
         if (heap[index] > heap[parent]) {
             temp = heap[index];
             heap[index] = heap[parent];
             heap[parent] = temp;
-            heapify(heap, parent);
+            maxHeapify(heap, parent);
         }
     }
 }
 
-void insertNode(int heap[],int size, int toAdd){
-    if (heap[0]<size){
+void maxPop (int heap[], int max[], int maxSize){ //log(n)
+    if (heap[0] > 0){
+        max[0] = 1;
+        max[1] = heap[1];
+        maxFillVoid(heap,maxSize,1); //log(n)
+        heap[0]--;
+    }else max[0] = 0;
+}
 
-        heap[(*actual)] = toAdd;
-    	(*actual)++;
-        heapify(heap, (*actual)-1);
-    }else{ 
-        // need to implement pop push
+void maxInsertNode(int heap[], int maxSize, int toAdd){ //log(n) or 2log(n)
+    if (heap[0] < maxSize){
+        // just insert
+        heap[0]++;
+        heap[heap[0]] = toAdd;
+        maxHeapify(heap, heap[0]); //log(n)
+    }else{
+        int max[2];
+        maxPop(heap, max, maxSize); //log(n)
+        maxInsertNode(heap, maxSize, toAdd); //log(n)
     }
     return ;
 }
 
-void fillVoid(int heap[], int size, int index){
-    int left = 2 * index, right = left+1;
-    if (right<size){
-        if(heap[left] > heap[right]){
-            heap[index] = heap[left];
-            fillVoid(heap, size, left);
-        }else{
-            heap[index] = heap[right];
-            fillVoid(heap, size, right);
-        }
-    }else if (left<size){
-        heap[index] = heap[left];
-        fillVoid(heap, size, left);
-    }
-    return;
-}
-// position 0 used to store the real size
-int* getMaxArray (int heap[], int size){
-    int max[2]={0,0};
-    if (heap[0] > 0){
-        max[0] = 1;
-        max[1] = heap[1];
-        fillVoid(heap,size,1);
-        heap[0]--;
-    }
-    return max;
-}
-int checkProperty(int heap[], int index){
+int maxCheckProperty(int heap[], int index){
     int left=2*index,right=2*index+1;
     if (right<heap[0]){
         if (heap[index]<heap[right]) return right;
-        right = checkProperty(heap,right);
+        right = maxCheckProperty(heap,right);
         if (right>-1) return right;
     } 
     if (left<heap[0]){
         if (heap[index]<heap[left]) return left;
-        left = checkProperty(heap,left);
+        left = maxCheckProperty(heap,left);
         if (left>-1) return left;
     } 
     return -1;
 }
+
+void printArray(int heap[]){
+    int i;
+    if (heap[0]>0){
+        printf("%d",heap[1]);
+        for ( i = 1; i < heap[0]; i++) printf(" %d",heap[i]);
+    }
+    printf("\n");
+}
+
+
+void minFillVoid(int heap[], int maxSize, int index){
+    int left = 2 * index, right = left+1;
+    if (right<maxSize){
+        if(heap[left] < heap[right]){
+            heap[index] = heap[left];
+            minFillVoid(heap, maxSize, left);
+        }else{
+            heap[index] = heap[right];
+            minFillVoid(heap, maxSize, right);
+        }
+    }else if (left<maxSize){
+        heap[index] = heap[left];
+        minFillVoid(heap, maxSize, left);
+    }
+    return;
+}
+void minHeapify(int heap[], int index){
+    int parent = index/2, temp;
+    if (parent>0) {
+        if (heap[index] < heap[parent]) {
+            temp = heap[index];
+            heap[index] = heap[parent];
+            heap[parent] = temp;
+            minHeapify(heap, parent);
+        }
+    }
+}
+
+void minPop (int heap[], int max[], int maxSize){ //log(n)
+    if (heap[0] > 0){
+        max[0] = 1;
+        max[1] = heap[1];
+        minFillVoid(heap,maxSize,1); //log(n)
+        heap[0]--;
+    }else max[0] = 0;
+}
+
+void minInsertNode(int heap[], int maxSize, int toAdd){ //log(n) or 2log(n)
+    if (heap[0] < maxSize){
+        // just insert
+        heap[0]++;
+        heap[heap[0]] = toAdd;
+        minHeapify(heap, heap[0]); //log(n)
+    }else{
+        int max[2];
+        minPop(heap, max, maxSize); //log(n)
+        minInsertNode(heap, maxSize, toAdd); //log(n)
+    }
+    return ;
+}
+
+int minCheckProperty(int heap[], int index){
+    int left=2*index,right=2*index+1;
+    if (right<heap[0]){
+        if (heap[index]>heap[right]) return right;
+        right = minCheckProperty(heap,right);
+        if (right>-1) return right;
+    } 
+    if (left<heap[0]){
+        if (heap[index]>heap[left]) return left;
+        left = minCheckProperty(heap,left);
+        if (left>-1) return left;
+    } 
+    return -1;
+}
+
 int main(){
-    int arr[100];
+    int maxSize = 31;
+    int arr[maxSize],tree[maxSize-1];
     int actual = 0;
-    int maxSize = 100;
+    int max[2] = {0,0};
     int r,i;
     srand(time(NULL));   // Initialization, should only be called once.
     arr[0]=0;
-    for (i=1;i<20;i++){
-        insertNode(arr,&actual,maxSize,rand());
-        r = checkProperty(arr,1);
+
+    for (i=1;i<11111;i++){
+        maxInsertNode(arr,maxSize,rand());
+        r = maxCheckProperty(arr,1);
         if(r>-1){
             printf("violato i_c:%d(%d),i_p:%d(%d)\n",r/2,arr[r/2],r,arr[r]);
-            display_tree(arr, actual);
-            break;            
+            return -1;
         }
-    
     } 
     
-    // for (i=0;i<20;i++){
-        
-    //     display_tree(arr, actual);
-    //     r = getMax(arr, &actual);
-    //     printf("\nMax: %d, Next:%d\n",r,arr[0]);
-    //     if(r<arr[0]) return 1;
-    // }
-    // for (i=0;i<50;i++)insertNode(arr,&actual,maxSize,rand());    
+    for (i=0;i<1000;i++){
+        maxPop(arr, max, maxSize);
+        if (max[0]!=0 && max[1]<arr[1]){
+            printf("\nViolazione Max: %d, Next:%d\n",max[1],arr[1]);
+            return -1;
+        }
+    }
+    for (i=1;i<11111;i++){
+        maxInsertNode(arr,maxSize,rand());
+        r = maxCheckProperty(arr,1);
+        if(r>-1){
+            printf("violato i_c:%d(%d),i_p:%d(%d)\n",r/2,arr[r/2],r,arr[r]);
+            return -1;
+        }
+    } 
     
+    printArray(arr);
+    for (i=0;i<1000;i++){
+        maxPop(arr, max, maxSize);
+        if (max[0]!=0 && max[1]<arr[1]){
+            printf("\nViolazione Max: %d, Next:%d\n",max[1],arr[1]);
+            return -1;
+        }
+    }
+
+    printf("tutto ok per i max heap dimensione %d\n",arr[0]);
+    printArray(arr);
+    printArray(arr);
+    printArray(arr);
+    for (i=0;i<11111;i++){
+        minInsertNode(arr,maxSize,rand());
+        r = minCheckProperty(arr,1);
+        if(r>-1){
+            // print array
+            for (i=0;i<arr[0];i++) tree[i]=arr[i+1];
+            display_tree(tree, arr[0]);
+            printf("\nViolato i_c:%d(%d),i_p:%d(%d)\n",r/2,arr[r/2],r,arr[r]);
+            return -1;
+        }
+    } 
+    for (i=0;i<arr[0];i++) tree[i]=arr[i+1];
+    display_tree(tree, arr[0]);
+    for (i=0;i<11111;i++){
+        minInsertNode(arr,maxSize,rand());
+        r = minCheckProperty(arr,1);
+        if(r>-1){
+            // print array            
+            for (i=0;i<arr[0];i++) tree[i]=arr[i+1];
+            display_tree(tree, arr[0]);
+            printf("\nViolato INSERT_BEFORE i_c:%d(%d),i_p:%d(%d)\n",r/2,arr[r/2],r,arr[r]);
+            return -1;
+        }
+
+        minPop(arr, max, maxSize);
+
+        r = minCheckProperty(arr,1);
+        if(r>-1){
+            for (i=0;i<arr[0];i++) tree[i]=arr[i+1];
+            display_tree(tree, arr[0]);
+            // print array
+            printf("\nViolato POP i_c:%d(%d),i_p:%d(%d)\n",r/2,arr[r/2],r,arr[r]);
+            return -1;
+        }
+
+        minInsertNode(arr,maxSize,rand());
+
+        r = minCheckProperty(arr,1);
+        if(r>-1){
+            for (i=0;i<arr[0];i++) tree[i]=arr[i+1];
+            display_tree(tree, arr[0]);
+            // print array
+            printf("\nViolato INSERT_AFTER i_c:%d(%d),i_p:%d(%d)\n",r/2,arr[r/2],r,arr[r]);
+            return -1;
+        }
+    } 
     return 0;
 }
