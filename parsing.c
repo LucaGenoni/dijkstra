@@ -71,16 +71,37 @@ void parsingFirstLine(FILE *input){
 //     }
 // };
 
+// inspired by a state machine
+// 
+// initial phase 0-1
+// 0 -'\d+'->1 (read a number)
+// 1 -' '-> 0 (read another number)
+// 
+// go to final state 2
+// 1 -'\n'-> 2
+// 2 <-"TopK\n"-> 2 
+// 2 -"AggiungiGrafo\n"-> 3
+// 2 -'\d+'-> 4 (read a cost of arc increase id_node)
+// parsing of arc costs 
+// 3 -'\d+'-> 4 (read a number)
+// 4 -' '-> 3 (read another number)
+// 4 -'\n'-> 2 (line complete try to go on final state)
 int main(){
     int n=0,init[2];
+    char computeDijkstra=0;
     dimensions();
 
+    // states 0,1
 	initParsing(init);
     printf("%d, %d",init[0],init[1]);
     finalCosts = malloc (init[0]*sizeof(t_node));
     int topKList[init[1]];
-    while ((c=getchar()) != EOF){
-        if (c=='a'){  
+    //check if final state
+    while ((c=getchar()) != EOF){ 
+        if (c=='A'){
+            if (computeDijkstra==1){
+                
+            }
             while (getchar()!='\n'); //clear
             parsingLine();
 
@@ -89,8 +110,14 @@ int main(){
             // parsing the node 0
             // store 
             // read and process disjktra
-        }else {
-            // print topk            
+        }else if (c=='T'){            
+            if (computeDijkstra==1){
+                computeDijkstra=0;
+            }      
+        }else{
+            while (getchar()!='\n');
+            // print topk    
+
         };
     }
     printf("End of file reached");
