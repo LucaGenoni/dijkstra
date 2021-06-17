@@ -115,12 +115,9 @@ void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 	i_min = 0;
 	queue[0] = 1;
 	for (i=1;i<number_Nodes;i++) queue[i] = 0;
-	// sourceHead[0].distance = 0;
-	// displayIncidentMatrix(sourceHead,number_Nodes);
-	// printf("\n");
 	previous= 0;
-	//fprintf\(standardout,"\nDijkstra\n");
-	displayIncidentMatrix(sourceHead,number_Nodes);
+	// fprintf(standardout,"\nDijkstra\n");
+	// displayIncidentMatrix(sourceHead,number_Nodes);
 	for (i=1;i<number_Nodes;i++){
 		// pick the first available node
 		for (j=1;j<number_Nodes;j++) 
@@ -137,27 +134,24 @@ void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 				}
 			}
 		}
-		if (previous==i_min) {
-			printf("break");
-			break;
-		}
+		if (previous==i_min) break;
 		previous=i_min;
 		// on the next iteration queue[i] will not be considered
 		queue[i_min] = 1;
 		//if(standardout) fprintf(standardout,"<");
 		for(temp = sourceHead[i_min].first,j=0; j<sourceHead[i_min].size; temp = temp->next,j++){
-			//fprintf\(standardout,"\n%d -> %d",sourceHead[i_min].id_Node,temp->label);
+			// fprintf(standardout,"%d -> %d",sourceHead[i_min].id_Node,temp->label);
 			if(queue[temp->label]==0){
 				min = sourceHead[i_min].distance + temp->cost;
-				//fprintf\(standardout," = %u<?<%u",min,sourceHead[temp->label].distance);
+				// fprintf(standardout," = %u<?<%u",min,sourceHead[temp->label].distance);
 				// fprintf(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
 				if (min < sourceHead[temp->label].distance){
 					sourceHead[temp->label].visited = 1;
 					sourceHead[temp->label].distance = min;
-					//fprintf\(standardout," update");
+					// fprintf(standardout," update");
 				}
 			}
-			//fprintf\(standardout," cost %d\n",sourceHead[temp->label].distance);
+			// fprintf(standardout," cost %d\n",sourceHead[temp->label].distance);
 		}
 	}
 	//if(standardout) fprintf(standardout,"\n");
@@ -214,7 +208,7 @@ void dijkstraHeap(t_headNode *sourceHead,unsigned int number_Nodes){
 // dosplay a single arcs 
 void displayArc(t_node *this){
 	// printf("%3d(%5d)  <%6x-%6x>, ",this->label,this->cost,this,(this->next));
-	//fprintf\(standardout,"%3d(%5d), ",this->label,this->cost);
+	fprintf(standardout,"%3d(%5d), ",this->label,this->cost);
 	return;
 }
 
@@ -231,7 +225,7 @@ void displayAllNode(t_headNode sourceHead){
 // example of loop to use for dijkstra
 void displayNode(t_headNode sourceHead){
 	t_node *temp;
-	//fprintf\(standardout,"\nN:%3d, V:%1d(%6d), S:%4d, (%6x->%6x) : ",sourceHead.id_Node,sourceHead.visited,sourceHead.distance,sourceHead.size,sourceHead.first,sourceHead.last);
+	fprintf(standardout,"\nN:%3d, V:%1d(%6d), S:%4d, (%6x->%6x) : ",sourceHead.id_Node,sourceHead.visited,sourceHead.distance,sourceHead.size,sourceHead.first,sourceHead.last);
 	if (sourceHead.last!=NULL) {
 		for(temp = sourceHead.first; temp != NULL && sourceHead.last!=temp; temp = temp->next) displayArc(temp);
 		displayArc(temp); // last element
@@ -243,7 +237,7 @@ void displayNode(t_headNode sourceHead){
 void displayIncidentMatrix(t_headNode *sourceHead,unsigned int number_Nodes){
 	int i;
 	for (i=0;i<number_Nodes;i++) displayNode(sourceHead[i]);
-	//fprintf\(standardout,"\n");
+	fprintf(standardout,"\n");
 	return;
 }
 
@@ -373,8 +367,8 @@ int main(){
 			}
 			
 			if (standardout) {
-				//fprintf\(standardout,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>    %d - cost: %d\n",id_Graphs, sum);
-				displayIncidentMatrix(incidence_Matrix,number_Nodes);
+				fprintf(standardout,"%d - cost: %d\n",id_Graphs, sum);
+				// displayIncidentMatrix(incidence_Matrix,number_Nodes);
 			};
 			id_Graphs++;
 		}else if (input_Char=='T'){
