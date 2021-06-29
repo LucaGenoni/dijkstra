@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #define SIZEBUFFER 2000
-#define INPUTTXT "tests/input/file/input_2"
-#define OUTPUTTXT "tests/output4"
+#define INPUTTXT "../tests/input/file/input_5"
+#define OUTPUTTXT ""
 FILE *standardin, *standardout;
 
 void localSetUp(){
