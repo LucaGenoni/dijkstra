@@ -1,9 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#define INPUTTXT "tests/input/file/input_4"
-#define OUTPUTTXT "tests/correct/output4"
+#define INPUTTXT "tests/input/file/input_2"
+#define OUTPUTTXT "tests/correct/output2"
 FILE *standardin,*standardout;
+
+void localSetUp(){ 
+    standardin=stdin;
+    standardout=stdout;   
+    standardin=fopen(INPUTTXT,"r");
+    if(!standardin) standardin= stdin;
+    standardout=fopen(OUTPUTTXT,"r");
+    if(standardin) {
+        fclose(standardout);
+        standardout=fopen(OUTPUTTXT,"w");
+    }else standardout=stdout;
+}
+
 typedef struct node{
 	unsigned int label,cost;
 	struct node *next;
@@ -15,6 +28,7 @@ typedef struct headNode{
 	t_node *first,*last;
 }t_headNode;
 
+void init();
 void free_incidence_Matrix(t_headNode* ,unsigned int);
 void minHeapifyTopBot(t_headNode *,unsigned int [], unsigned int );
 unsigned int minPop (t_headNode *,unsigned int [],unsigned int);
@@ -264,19 +278,12 @@ void pushArc(t_headNode *sourceHead,unsigned int src, unsigned int dest,unsigned
 int main(){
 // definitions
 	// constants
-		unsigned int number_Nodes, top_K;
-		t_headNode *incidence_Matrix;
-	// variables
-		unsigned int id_Graphs, src, dest, costNode, sum, max, i_max,size_topK;
-		char input_Char;
-		standardin =stdin;
-         standardin=fopen(INPUTTXT,"r");
-         if(!standardin) standardin= stdin;
-         standardout=fopen(OUTPUTTXT,"r");
-		 if(standardin) {
-		 	fclose(standardout);
-         	standardout=fopen(OUTPUTTXT,"w");
-		 }
+    unsigned int number_Nodes, top_K;
+    t_headNode *incidence_Matrix;
+    unsigned int id_Graphs, src, dest, costNode, sum, max, i_max,size_topK;
+    char input_Char;
+    localSetUp();
+    init();
 // Initializations
 	// constants 
 		if(fscanf(standardin,"%d %d",&number_Nodes,&top_K)==EOF) return 10;

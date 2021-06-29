@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#define SIZEBUFFER 1000
+#define SIZEBUFFER 2000
 #define SIZEBUFFER_1 SIZEBUFFER-1
 
 #define INPUTTXT "tests/input/file/input_2"
@@ -16,22 +16,31 @@ FILE *standardin,*standardout;
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef struct line{
-    char isEnd;                 // boolean 't' if it's the last line of the arcs of the node of the current graph
+    char isEnd;                 // boolean 't' if it's the last line of the arcs of the headNode of the current graph
     char buffer[SIZEBUFFER];    // buffer to store the line with an '\0' to end the buffer
     struct line *next;          // pointer to the next lines in case isEnd='f'
 }t_line;
 
 typedef struct node{
-    char isVisited;     //boolean 't' if already expanded by dijkstra, otherwise 'f'
-    char isReachable;   //boolean 't' if the node is reachable from 0, otherwise 'f'
-	int idNode;         //store the id of the node for print purposes
-    int distance;       //store the distance from 0 to this node
-    int posHeap;        //store the position on the heap for direct access
-    t_line *arcs;       //store the line of the arcs
+	int label,cost;
+	struct node *next;
 }t_node;
 
+typedef struct headNode{
+    char isVisited;     //boolean 't' if already expanded by dijkstra, otherwise 'f'
+    char isReachable;   //boolean 't' if the headNode is reachable from 0, otherwise 'f'
+	int idNode;         //store the id of the headNode for print purposes
+    int distance;       //store the distance from 0 to this headNode
+    int posHeap;        //store the position on the heap for direct access
+    int size;
+	t_node *first,*last;
+    t_line *arcs;       //store the line of the arcs
+}t_headNode;
+
+
+
 typedef struct graph{
-    int id_graph;       //id of the graph to print
+    int idGraph;       //id of the graph to print
     int cost;           //sum of the minimal paths to keep updated the topk
 }t_graph;
 // _______________________________________________________________________________________________________________
@@ -43,7 +52,7 @@ typedef struct graph{
 char buffer[SIZEBUFFER], *trash;
 // variable for dijsktra
 int sizeGraph;
-t_node *dictGraph;
+t_headNode *dictGraph;
 int sizeGraphQueue;
 int *queue;
 char addGraphToTopK;
@@ -53,33 +62,63 @@ int sizeOut, maxSizeOut;
 t_graph *finalOut;
 char c;
 
+// modified push, allow overwrite to skip repeated malloc 
+// space worst case... worse than an adjacent matrix
+// time worst case, should be better than adjacent matrix
+void pushArc(int src, int dest,int cost){
+	if (dictGraph[src].last == NULL){ 
+		//first element of the list
+		dictGraph[src].last = dictGraph[src].first;
+	}else if (dictGraph[src].last->next == NULL){
+		//new element need to be allocated to be added.
+		dictGraph[src].last->next = malloc (sizeof(t_node));
+		dictGraph[src].last = dictGraph[src].last->next;
+		dictGraph[src].last->next = NULL;
+	}else dictGraph[src].last = dictGraph[src].last->next;
+	// overwrite the new values
+	dictGraph[src].last->label = dest;
+	dictGraph[src].last->cost = cost;
+	dictGraph[src].size++;
+
+	return;
+}
 // ---------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------
-void display(FILE *sdt,t_node node){
-    t_line *temp;
+
+void displayArc(t_node *this){
+	// printf("%3d(%5d)  <%6x-%6x>, ",this->label,this->cost,this,(this->next));
+	fprintf(standardout,"%3d(%5d), ",this->label,this->cost);
+	return;
+}
+void display(FILE *sdt,t_headNode headNode){
+//    t_line *temp;
+    t_node *temp;
     char asd;
     int i;
-    // fprintf(sdt,"%5d(%10d)[%2d] ",node.idNode,node.distance,node.posHeap);
-    // fprintf(sdt,"[v:%1c,r:%1c] ",node.isVisited,node.isReachable);
-    if (node.isVisited=='f') 
-        for(temp=node.arcs; temp!= NULL;temp=temp->next){
-            ;
-            for(i=0;(asd = temp->buffer[i])!='\n' && asd!='\0';i++) // fprintf(sdt,"%c",asd);
-            if(temp->isEnd=='t') break;
-        }
-    // fprintf(sdt,"\n");
+    fprintf(sdt,"%5d(%10d)[%2d] ",headNode.idNode,headNode.distance,headNode.posHeap);
+    fprintf(sdt,"[v:%1c,r:%1c] ",headNode.isVisited,headNode.isReachable);
+    if (headNode.last!=NULL){
+        for(temp = headNode.first; temp != NULL && headNode.last!=temp; temp = temp->next) displayArc(temp);
+		displayArc(temp); // last element
+    }
+        // for(temp=headNode.arcs; temp!= NULL;temp=temp->next){
+        //     ;
+        //     for(i=0;(asd = temp->buffer[i])!='\n' && asd!='\0';i++) fprintf(sdt,"%c",asd);
+        //     if(temp->isEnd=='t') break;
+        // }
+    fprintf(sdt,"\n");
 }
 void displayGraph(FILE *sdt){
     int i;
-    // fprintf(sdt,"\n");
+    fprintf(sdt,"\n");
     for(i=0;i<sizeGraph;i++) display(sdt,dictGraph[i]);
 }
 void dimensions(){
-    printf("\nSize node: %d",sizeof(t_node));
+    printf("\nSize headNode: %d",sizeof(t_headNode));
     printf("\nSize line: %d",sizeof(t_line));
     printf("\n");
 }
@@ -87,7 +126,7 @@ void dimensions(){
 void initParsing();
 void storeLine(int);
 void parsingFirstLine();
-
+void storeLineOnIncidence(int);
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -133,7 +172,7 @@ t_graph maxPop(){ // log(n)
 }
 int maxPopInsert(int idNewGraph, int sumMinPaths){ //log(n)
     finalOut[0].cost = sumMinPaths;
-    finalOut[0].id_graph = idNewGraph;
+    finalOut[0].idGraph = idNewGraph;
     maxHeapify(0);
 }
 
@@ -141,30 +180,30 @@ void maxInsert(int idNewGraph, int sumMinPaths){
 	int i;
     // printf("new Insert %d %d",idNewGraph,sumMinPaths);
     if (sizeOut==0){
-        finalOut[0].id_graph = idNewGraph;
+        finalOut[0].idGraph = idNewGraph;
         finalOut[0].cost = sumMinPaths;
         sizeOut += 1;
     }else if(sizeOut<maxSizeOut){
-        finalOut[sizeOut].id_graph = idNewGraph;
+        finalOut[sizeOut].idGraph = idNewGraph;
         finalOut[sizeOut].cost = sumMinPaths;
         sizeOut += 1;
         maxHeapifyBotTop(sizeOut);
     }else if(sumMinPaths<finalOut[0].cost){
         finalOut[0].cost = sumMinPaths;
-        finalOut[0].id_graph = idNewGraph;
+        finalOut[0].idGraph = idNewGraph;
         maxHeapify(0);
     }
 }
 void displayMaxHeapWithDetails(){
 	int i;
-    for (i=0; i<sizeOut; i++) printf("%d(%d) ", finalOut[i].id_graph, finalOut[i].cost);
+    for (i=0; i<sizeOut; i++) printf("%d(%d) ", finalOut[i].idGraph, finalOut[i].cost);
     printf("\n");
 }
 void displayMaxHeap(){
 	int i;
     if (sizeOut>0){
-        printf("%d", finalOut[0].id_graph);
-        for (i=1; i<sizeOut; i++) printf(" %d", finalOut[i].id_graph);
+        printf("%d", finalOut[0].idGraph);
+        for (i=1; i<sizeOut; i++) printf(" %d", finalOut[i].idGraph);
     }
     printf("\n");
 }
@@ -417,7 +456,7 @@ void dijkstraStepOnline(){
 void parsingFirstLine(){
     int i,iNode;
     c=getc(standardin);
-    while ((c=getc(standardin))!=',' && c!='\n'); // skip reading node 0
+    while ((c=getc(standardin))!=',' && c!='\n'); // skip reading headNode 0
     iNode=1;
     while(c!='\n'){ //if , continue reading
         c=getc(standardin); //read first most significant cipher
@@ -460,7 +499,7 @@ void parsingFirstLine(){
 // 1 -'\n'-> 2
 // 2 <-"TopK\n"-> 2 
 // 2 -"AggiungiGrafo\n"-> 3
-// 2 -'\d+'-> 4 (read cost arcs of another node, increase idNode)
+// 2 -'\d+'-> 4 (read cost arcs of another headNode, increase idNode)
 // parsing of arc costs 
 // 3 -'\d+'-> 4 (read a number)
 // 4 -' '-> 3 (read another number)
@@ -492,7 +531,7 @@ int main(){
             parsingFirstLine();
             if (sizeGraphQueue>0) c=getc(standardin);
             else{
-                // printf("No isReachable node");
+                // printf("No isReachable headNode");
                 //skip the reading of the entire graph 
                 while ((c=getc(standardin))!= EOF && c!='A' && c !='T') while (getc(standardin)!='\n');
                 // immediately add the graph with cost 0
@@ -500,8 +539,20 @@ int main(){
                 maxInsert(idGraph,0);
                 fprintf(stdin,"%d - cost: %d\n",idGraph, 0);
             } 
-            
-            displayGraph(standardout);
+            for (arcNode=1;arcNode<sizeGraph;arcNode++){
+                // if (queue[0]==arcNode){
+                //     // process dijkstra while reading
+                //     printf("on  |");
+                //     // dijkstraStepOnline();
+                //     // while(queue[0]<arcNode && sizeGraphQueue>0){
+                //     //     // fprintf("off |");
+                //     //     displayGraph(stdout);
+                //     //     // dijkstraStepOffline();
+                //     // }
+                // }else 
+                storeLineOnIncidence(arcNode);
+            }
+            displayGraph(stdout);
             
         }else if (c=='T'){
             appendLastDijkstra(idGraph);
@@ -513,24 +564,10 @@ int main(){
             c=getc(standardin);
 
         }else{
-            arcNode++;
-            if (queue[0]==arcNode){
-                // process dijkstra while reading
-                printf("on  |");
-                dijkstraStepOnline();
-                while(queue[0]<arcNode && sizeGraphQueue>0){
-                    // fprintf("off |");
-                    displayGraph(stdout);
-                    dijkstraStepOffline();
-
-                }
-            
-            }else {
-                // store the arc information for future use;
-                storeLine(arcNode);
-            }
-            c=getc(standardin);
-        };
+            fgets(buffer,SIZEBUFFER,standardin);
+            printf("\nSTRANGE\n%s",buffer);
+            return 5;
+        } 
     }
     printf("\nEOF");
     return 0;
@@ -551,17 +588,19 @@ void initParsing(){
     buffer[i]='\0';
     sizeGraph=atoi(buffer);
     maxSizeOut=atoi(buffer+(++i)); 
-    dictGraph=malloc (sizeGraph*sizeof(t_node));
+    dictGraph=malloc (sizeGraph*sizeof(t_headNode));
     queue=malloc (sizeGraph*sizeof(int));
-    dictGraph[0].arcs = NULL;
-    dictGraph[0].distance = 0;
-    dictGraph[0].idNode=0;
-    dictGraph[0].isReachable='t';
-    dictGraph[0].isVisited='t';
-    dictGraph[0].posHeap=-1;
-    for(i=1;i<sizeGraph;i++){
-        dictGraph[i].arcs=malloc(sizeof(t_line));
-        dictGraph[i].arcs->next=NULL;
+    for(i=0;i<sizeGraph;i++){
+        dictGraph[i].idNode = i;
+        dictGraph[i].distance = 0;  
+        dictGraph[i].isReachable='t';
+        dictGraph[i].isVisited='t';
+        dictGraph[i].posHeap=-1;
+        dictGraph[i].first = (t_node*) malloc (sizeof(t_node));
+        dictGraph[i].last = NULL;
+        dictGraph[i].first->label = -1;
+        dictGraph[i].first->cost = -1;
+        dictGraph[i].first->next = NULL;
     }
     finalOut=malloc (maxSizeOut*sizeof(t_graph));
     sizeOut=0;
@@ -594,4 +633,21 @@ void storeLine(int arcNode){
     }
     temp->buffer[i] = '\n';
     temp->isEnd='t';
+};
+
+void storeLineOnIncidence(int arcNode){
+    int i,cost;
+    printf("[%d",arcNode);
+    while ((c=getc(standardin))!=',');
+    dictGraph[arcNode].last = NULL;
+    dictGraph[arcNode].size = 0;
+    // push existing arcs
+    for(i=1;i<sizeGraph;i++){
+        if (i==arcNode) while (c=getc(standardin)!=44 && c!=10 && c!=0);
+        else{
+            if(fscanf(standardin,"%d",&cost)) pushArc(arcNode,i,cost);
+            c=getc(standardin);
+        }
+    }
+    printf("]");
 };
