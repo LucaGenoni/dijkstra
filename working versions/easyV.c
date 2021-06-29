@@ -56,7 +56,7 @@ int minQueue_list(int *queue,int current, int sizeQueue, int *cost){
 // SPT_Dijkstra (G, r, P, d)
 // O(|nodes|^2)
 int SPT_Dijkstra_Matrix_List(){
-    int i, j, k;
+    int i, j;
     int sizeQueue, selected, temp;
     int cost[sizeGraph], toQueue[sizeGraph], queue[sizeGraph];
 
