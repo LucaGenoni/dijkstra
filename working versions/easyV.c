@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#define SIZEBUFFER 2000
 #define INPUTTXT "../tests/input/file/input_5"
 #define OUTPUTTXT ""
 FILE *standardin, *standardout;
@@ -16,7 +15,7 @@ void localSetUp(){
     }else standardout = stdout;
 }
 
-char bInput[SIZEBUFFER], c;
+char c;
 int **graph, sizeGraph;
 typedef struct graph{
     int idGraph; //id of the graph to print
