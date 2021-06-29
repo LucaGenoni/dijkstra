@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#define INPUTTXT "tests/input/file/input_4"
-#define OUTPUTTXT "tests/correct/output4"
+#define INPUTTXT "../tests/input/file/input_5" 
+#define OUTPUTTXT "../tests/output/file/output_5"
 FILE *standardin,*standardout;
 typedef struct node{
 	unsigned int label,cost;
@@ -377,10 +377,10 @@ int main(){
 			else size_topK = top_K;
 			if (size_topK>0){
 				size_topK--;
-                printf(" %d(%d)",listTopK[0][0],listTopK[0][1]);
-				for (src = 1; src < size_topK+1; src++) printf(" %d(%d)",listTopK[src][0],listTopK[src][1]);
+                fprintf(standardout," %d(%d)",listTopK[0][0],listTopK[0][1]);
+				for (src = 1; src < size_topK+1; src++) fprintf(standardout," %d(%d)",listTopK[src][0],listTopK[src][1]);
 			}
-			printf("\n");
+			fprintf(standardout,"\n");
 		}
 	};
 
