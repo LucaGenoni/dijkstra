@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #define INPUTTXT "../tests/input/file/input_5" 
-#define OUTPUTTXT "../tests/output/file/output_5"
+#define OUTPUTTXT "../tests/output/detailsDijkstra"
 FILE *standardin,*standardout;
 typedef struct node{
 	unsigned int label,cost;
@@ -116,7 +116,7 @@ void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 	queue[0] = 1;
 	for (i=1;i<number_Nodes;i++) queue[i] = 0;
 	previous= 0;
-	// fprintf(standardout,"\nDijkstra\n");
+	fprintf(standardout,"\nDijkstra\n");
 	// displayIncidentMatrix(sourceHead,number_Nodes);
 	for (i=1;i<number_Nodes;i++){
 		// pick the first available node
@@ -138,23 +138,23 @@ void dijkstra(t_headNode *sourceHead,unsigned int number_Nodes){
 		previous=i_min;
 		// on the next iteration queue[i] will not be considered
 		queue[i_min] = 1;
-		//if(standardout) fprintf(standardout,"<");
+		fprintf(standardout,"<");
 		for(temp = sourceHead[i_min].first,j=0; j<sourceHead[i_min].size; temp = temp->next,j++){
-			// fprintf(standardout,"%d -> %d",sourceHead[i_min].id_Node,temp->label);
+			fprintf(standardout,"%d -> %d",sourceHead[i_min].id_Node,temp->label);
 			if(queue[temp->label]==0){
 				min = sourceHead[i_min].distance + temp->cost;
-				// fprintf(standardout," = %u<?<%u",min,sourceHead[temp->label].distance);
-				// fprintf(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
+				fprintf(standardout," = %u<?<%u",min,sourceHead[temp->label].distance);
+				fprintf(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
 				if (min < sourceHead[temp->label].distance){
 					sourceHead[temp->label].visited = 1;
 					sourceHead[temp->label].distance = min;
-					// fprintf(standardout," update");
+					fprintf(standardout," update");
 				}
 			}
-			// fprintf(standardout," cost %d\n",sourceHead[temp->label].distance);
+			fprintf(standardout," cost %d\n",sourceHead[temp->label].distance);
 		}
 	}
-	//if(standardout) fprintf(standardout,"\n");
+	fprintf(standardout,"\n");
 	return;
 };
 

@@ -145,7 +145,7 @@ void swapGraph(t_graph *a, t_graph *b){
     *a=temp;
 }
 
-void maxHeapifyBotTop(int i){
+void maxHeapifyBotTop(int i){ // log(n)
     int parent = i/2;
     if(finalOut[parent].cost < finalOut[i].cost){
         swapGraph(&finalOut[i], &finalOut[parent]);
@@ -153,7 +153,7 @@ void maxHeapifyBotTop(int i){
     }
 }
 
-void maxHeapify(int i){ //log(n)
+void maxHeapify(int i){ // log(n)
     if (sizeOut > 1){
         int largest=i, l=2*i + 1, r=l+1;
         if (l<sizeOut && finalOut[l].cost > finalOut[largest].cost) largest=l;
@@ -164,16 +164,18 @@ void maxHeapify(int i){ //log(n)
         }
     }
 }
+
 t_graph maxPop(){ // log(n)
     sizeOut--;
     swapGraph(&finalOut[0], &finalOut[sizeOut]);
-    if (sizeOut>0) maxHeapify(0); // log(n)
+    if (sizeOut>0) maxHeapify(0);   // log(n)
     return finalOut[sizeOut];
 }
+
 int maxPopInsert(int idNewGraph, int sumMinPaths){ //log(n)
     finalOut[0].cost = sumMinPaths;
     finalOut[0].idGraph = idNewGraph;
-    maxHeapify(0);
+    maxHeapify(0);  // log(n)
 }
 
 void maxInsert(int idNewGraph, int sumMinPaths){

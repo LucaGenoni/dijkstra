@@ -189,11 +189,11 @@ void dijkstraHeap(t_headNode *sourceHead,unsigned int number_Nodes){
 		previous=i_min;
 		// on the next iteration queue[i] will not be considered
 		queue[i_min] = 1;
-		//if(standardout) fprintf(standardout,"<");
+		fprintf(standardout,"<");
 		for(temp = sourceHead[i_min].first,j=0; j<sourceHead[i_min].size; temp = temp->next,j++){
 			if(queue[temp->label]==0){
 				min = sourceHead[i_min].distance + temp->cost;
-				//fprintf\(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
+				fprintf(standardout,"%d -> %d cost %d",sourceHead[i_min].id_Node,temp->label,min);
 				if (min < sourceHead[temp->label].distance){
 					sourceHead[temp->label].visited = 1;
 					sourceHead[temp->label].distance = min;
