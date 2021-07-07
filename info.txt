@@ -1,7 +1,0 @@
-Questo e' il link alla registrazione
-https://politecnicomilano.webex.com/politecnicomilano/ldr.php?RCID=ecd7732cec5d44a8aa8ba35d35cab823
-
-Questo e' il verificatore e credenziali per accedere
-host: https://dum-e.deib.polimi.it
-nome utente: 10490060
-password: 3ccl2J5w
