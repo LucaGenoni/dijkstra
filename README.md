@@ -6,6 +6,6 @@ Since it is impossible to know beforehand if the graph is dense or sparse I used
 
 add graph: O(n^2 log(n) + log(TopK))
 show TopK: O(TopK)
-## Results
+<!-- ## Results
 As shown in the image below this implementation passed all the tests
-![alt text](results.png)
+![alt text](results.png) -->
